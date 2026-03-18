@@ -124,42 +124,42 @@ Insights Display
 
 ## 🖼️ Application Screenshots
 
-### 📊 Overall Analysis
+### 📊 OVERALL ANALYSIS
 ![Overall](assets/Screenshot%202026-03-18%20150153.png)
 
 ---
 
-### 🏙 City-wise Funding
+### 🏙 VERTICAL ANALYSIS AND TYPES OF ROUNDS
 ![City](assets/Screenshot%202026-03-18%20150233.png)
 
 ---
 
-### 📈 Funding Heatmap
+### 📈CITY WISE FUNDING , TOP STARTUP AND INVESTORS
 ![Heatmap](assets/Screenshot%202026-03-18%20150248.png)
 
 ---
 
-### 📊 Top Startups & Investors
+### 📊 FUNDING HEATMAP
 ![Top](assets/Screenshot%202026-03-18%20150256.png)
 
 ---
 
-### 🧠 Investor Analysis
+### 🧠 STARTUP ANALYSIS
 ![Investor](assets/Screenshot%202026-03-18%20150312.png)
 
 ---
 
-### 📉 Investment Insights
+### 📉 INVESTOR INSIGHTS
 ![Insights](assets/Screenshot%202026-03-18%20150333.png)
 
 ---
 
-### 🏢 Startup Analysis
+### 🏢 SIMILAR INVESTMENTS
 ![Startup](assets/Screenshot%202026-03-18%20150353.png)
 
 ---
 
-### 🔍 Vertical Analysis
+### 🔍 SIDEBAR DROPDOWN
 ![Vertical](assets/Screenshot%202026-03-18%20150405.png)
 
 ---
