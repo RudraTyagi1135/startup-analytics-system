@@ -3,206 +3,187 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Load the dataset
-df = pd.read_csv('startup_cleaned.csv')
+# -----------------------------
+# LOAD DATA
+# -----------------------------
+@st.cache_data
+def load_data():
+    df = pd.read_csv('startup_cleaned.csv')
+    df['investors'] = df['investors'].astype(str).str.strip()
+    df['date'] = pd.to_datetime(df['date'], errors='coerce')
+    df = df.dropna(subset=['date'])
+    df['year'] = df['date'].dt.year
+    return df
 
-# Clean the investor column by stripping any extra spaces
-df['investors'] = df['investors'].str.strip()
+df = load_data()
 
-# Check if the 'date' column exists and convert it to datetime format
-if 'date' in df.columns:
-    df['date'] = pd.to_datetime(df['date'], errors='coerce')  # Convert to datetime, coerce errors to NaT
-else:
-    st.error("The 'date' column is missing from the dataset.")
-
-# Drop rows with NaT in the 'date' column if any exist
-df = df.dropna(subset=['date'])
-
-# Add year column for analysis
-df['year'] = df['date'].dt.year
-
-# Sidebar for analysis selection
+# -----------------------------
+# SIDEBAR
+# -----------------------------
 st.sidebar.title('STARTUP ANALYSIS')
-option = st.sidebar.selectbox('SELECT ONE', ['OVERALL ANALYSIS', 'STARTUP', 'INVESTOR'])
+option = st.sidebar.selectbox(
+    'SELECT ONE',
+    ['OVERALL ANALYSIS', 'STARTUP', 'INVESTOR']
+)
 
+# =========================================================
+# OVERALL ANALYSIS
+# =========================================================
 if option == 'OVERALL ANALYSIS':
     st.title('OVERALL ANALYSIS')
-    btn0 = st.sidebar.button('OVERALL ANALYSIS')
-    if btn0:
-        # Total number of startups and total amount invested
-        total_startups = df['startup'].nunique()
-        total_invested = df['amount'].sum()
-        max_investment = df['amount'].max()
-        avg_investment = df['amount'].mean()
 
-        st.subheader('Total Startups and Investments')
-        st.write(f"Total Startups: {total_startups}")
-        st.write(f"Total Amount Invested: ${total_invested:,.2f}")
-        st.write(f"Maximum Amount Invested: ${max_investment:,.2f}")
-        st.write(f"Average Amount Invested: ${avg_investment:,.2f}")
+    total_startups = df['startup'].nunique()
+    total_invested = df['amount'].sum()
+    max_investment = df['amount'].max()
+    avg_investment = df['amount'].mean()
 
-        # Vertical Analysis: Top Vertical by Count and Total Investment
-        vertical_analysis = df.groupby('vertical')['amount'].agg(['count', 'sum']).reset_index()
-        top_vertical = vertical_analysis.loc[vertical_analysis['sum'].idxmax()]
+    st.subheader('Total Startups and Investments')
+    st.write(f"Total Startups: {total_startups}")
+    st.write(f"Total Amount Invested: ${total_invested:,.2f}")
+    st.write(f"Maximum Amount Invested: ${max_investment:,.2f}")
+    st.write(f"Average Amount Invested: ${avg_investment:,.2f}")
 
-        st.subheader('Vertical Analysis')
-        st.write("Top Vertical by Count and Total Investment:")
-        st.write(
-            f"Vertical: {top_vertical['vertical']}, Count: {top_vertical['count']}, Total Investment: ${top_vertical['sum']:,.2f}")
+    # Vertical Analysis
+    vertical_analysis = df.groupby('vertical')['amount'].agg(['count', 'sum']).reset_index()
+    top_vertical = vertical_analysis.loc[vertical_analysis['sum'].idxmax()]
 
-        # Bar Chart for Vertical Analysis with Vertical Labels
-        plt.figure(figsize=(10, 5))
-        sns.barplot(x='count', y='vertical', data=vertical_analysis.sort_values('count', ascending=False),
-                    palette='viridis')
-        plt.title('Vertical Analysis: Count of Startups by Vertical')
-        plt.xlabel('Count of Startups')
-        plt.ylabel('Vertical')
-        plt.xticks(rotation=90)  # Rotate x-axis labels vertically
-        st.pyplot(plt)  # Display the plot in Streamlit
-        plt.clf()  # Clear the current figure after displaying
+    st.subheader('Vertical Analysis')
+    st.write(
+        f"Top Vertical: {top_vertical['vertical']} | Count: {top_vertical['count']} | Total: ${top_vertical['sum']:,.2f}"
+    )
 
-        # Types of Rounds (formerly Types of Funding)
-        round_types = df['round'].value_counts()
-        st.subheader('Types of Rounds')
-        st.bar_chart(round_types)
+    plt.figure(figsize=(10, 5))
+    sns.barplot(
+        x='count',
+        y='vertical',
+        data=vertical_analysis.sort_values('count', ascending=False),
+        palette='viridis'
+    )
+    st.pyplot(plt)
+    plt.clf()
 
-        # City-wise Funding Analysis
-        city_funding = df.groupby('city')['amount'].sum().reset_index()
-        st.subheader('City-wise Funding')
-        st.bar_chart(city_funding.set_index('city'))
+    # Rounds
+    st.subheader('Types of Rounds')
+    st.bar_chart(df['round'].value_counts())
 
-        # Top Startups Year-wise and Overall
-        df['year'] = df['date'].dt.year
-        top_startups_overall = df.groupby('startup')['amount'].sum().reset_index().nlargest(5, 'amount')
-        st.subheader('Top Startups Overall')
-        st.write(top_startups_overall)
+    # City funding
+    st.subheader('City-wise Funding')
+    city_funding = df.groupby('city')['amount'].sum()
+    st.bar_chart(city_funding)
 
-        top_startups_yearwise = df.groupby(['year', 'startup'])['amount'].sum().reset_index()
-        top_startups_yearwise = top_startups_yearwise.loc[top_startups_yearwise.groupby('year')['amount'].idxmax()]
-        st.subheader('Top Startups Year-wise')
-        st.write(top_startups_yearwise)
+    # Top startups
+    st.subheader('Top Startups Overall')
+    top_startups = df.groupby('startup')['amount'].sum().nlargest(5)
+    st.write(top_startups)
 
-        # Top Investors
-        top_investors = df.groupby('investors')['amount'].sum().reset_index().nlargest(5, 'amount')
-        st.subheader('Top Investors')
-        st.write(top_investors)
+    # Top investors
+    st.subheader('Top Investors')
+    top_investors = df.groupby('investors')['amount'].sum().nlargest(5)
+    st.write(top_investors)
 
-        # Funding Heatmap
-        funding_heatmap_data = df.pivot_table(index='year', columns='vertical', values='amount', aggfunc='sum').fillna(
-            0)
-        st.subheader('Funding Heatmap')
-        plt.figure(figsize=(10, 5))
-        sns.heatmap(funding_heatmap_data, annot=True, fmt=".0f", cmap='Blues')
-        plt.title('Funding Heatmap by Year and Vertical')
-        st.pyplot(plt)
+    # Heatmap
+    st.subheader('Funding Heatmap')
+    heatmap_data = df.pivot_table(
+        index='year',
+        columns='vertical',
+        values='amount',
+        aggfunc='sum'
+    ).fillna(0)
+
+    plt.figure(figsize=(10, 5))
+    sns.heatmap(heatmap_data, cmap='Blues')
+    st.pyplot(plt)
 
 
+# =========================================================
+# STARTUP ANALYSIS 
+# =========================================================
 elif option == 'STARTUP':
-    selected_startup = st.sidebar.selectbox('SELECT ONE', sorted(df['startup'].unique().tolist()))
-    btn1 = st.sidebar.button('FIND STARTUP DETAILS')
 
-    if btn1:
-        st.title(f'STARTUP ANALYSIS: {selected_startup}')
+    selected_startup = st.sidebar.selectbox(
+        'SELECT STARTUP',
+        sorted(df['startup'].dropna().unique())
+    )
 
-        # Dropdown for selecting a startup
-        selected_startup = st.selectbox('Select a Startup', df['startup'].unique())
+    st.title(f'STARTUP ANALYSIS: {selected_startup}')
 
-        # Get the selected startup's data
-        startup_data = df[df['startup'] == selected_startup].iloc[0]
+    startup_df = df[df['startup'] == selected_startup]
 
-        # Display Company POV details
+    if startup_df.empty:
+        st.warning("No data found for this startup.")
+    else:
+        latest = startup_df.sort_values('date', ascending=False).iloc[0]
+
         st.subheader('Company POV')
         col1, col2 = st.columns(2)
 
         with col1:
-            st.write(f"**Name**: {startup_data['startup']}")
-            st.write(f"**Investors**: {startup_data['investors']}")
-            st.write(f"**Vertical**: {startup_data['vertical']}")
-            st.write(f"**Sub Vertical**: {startup_data['subvertical']}")
-            st.write(f"**Location**: {startup_data['city']}")
-            st.write(f"**Funding Rounds**: {startup_data['round']}")
-            st.write(f"**amount**: {startup_data['amount']}")
+            st.write(f"**Name**: {latest['startup']}")
+            st.write(f"**Investors**: {latest['investors']}")
+            st.write(f"**Vertical**: {latest['vertical']}")
+            st.write(f"**Sub Vertical**: {latest['subvertical']}")
+            st.write(f"**Location**: {latest['city']}")
+            st.write(f"**Funding Round**: {latest['round']}")
+            st.write(f"**Amount**: {latest['amount']}")
 
         with col2:
-            st.write(f"**Date**: {startup_data['date']}")
-            st.write(f"**Similar Companies**: {startup_data['startup']}")
+            st.write(f"**Date**: {latest['date']}")
+            st.write(f"**Total Funding**: {startup_df['amount'].sum():,.2f}")
 
-        # Visualize funding rounds if applicable
-        funding_rounds_data = df[df['startup'] == selected_startup]['round'].value_counts()
-        if not funding_rounds_data.empty:
-            st.subheader('Funding Rounds Visualization')
-            plt.figure(figsize=(8, 4))
-            sns.barplot(x=funding_rounds_data.index, y=funding_rounds_data.values, palette='viridis')
-            plt.title(f'Funding Rounds for {selected_startup}')
-            plt.xlabel('Funding Rounds')
-            plt.ylabel('Count')
-            st.pyplot(plt)
+        # Funding rounds distribution
+        st.subheader('Funding Rounds Distribution')
+        st.bar_chart(startup_df['round'].value_counts())
 
-        # Optionally, you could display a line chart for total funding over time if date information is available
-        # Ensure 'date' is parsed as a datetime in your DataFrame
-        if 'date' in df.columns:
-            df['date'] = pd.to_datetime(df['date'])
-            total_funding_over_time = df.groupby('date')['amount'].sum().reset_index()
+        # Funding over time
+        st.subheader('Funding Over Time')
+        funding_trend = startup_df.groupby('date')['amount'].sum()
+        st.line_chart(funding_trend)
 
-            st.subheader('Total Funding Over Time')
-            plt.figure(figsize=(10, 5))
-            sns.lineplot(data=total_funding_over_time, x='date', y='amount', marker='o', color='blue')
-            plt.title('Total Funding Over Time')
-            plt.xlabel('Date')
-            plt.ylabel('Total Funding Amount')
-            st.pyplot(plt)
 
+# =========================================================
+# INVESTOR ANALYSIS
+# =========================================================
 else:
-    # Investor selection and analysis
-    investor = st.sidebar.selectbox('SELECT ONE', sorted(set(df['investors'].str.split(',').sum())))
-    btn2 = st.sidebar.button('FIND INVESTOR DETAILS')
 
-    if btn2:
-        st.title(f"Investor Analysis for {investor}")
+    investor_list = sorted(set(df['investors'].str.split(',').sum()))
+    investor = st.sidebar.selectbox('SELECT INVESTOR', investor_list)
 
-        # Filter investments by the selected investor
-        investor_data = df[df['investors'].str.contains(investor)]
+    st.title(f"Investor Analysis: {investor}")
 
-        # Show recent investments
+    investor_data = df[df['investors'].str.contains(investor, na=False)]
+
+    if investor_data.empty:
+        st.warning("No data found for this investor.")
+    else:
+        # Recent investments
         st.subheader('Recent Investments')
         st.dataframe(
-            investor_data[['date', 'startup', 'vertical','city','round', 'amount']].sort_values(by='date', ascending=False).head(5))
+            investor_data.sort_values('date', ascending=False)[
+                ['date', 'startup', 'vertical', 'city', 'round', 'amount']
+            ].head()
+        )
 
-        # Show biggest investment
-        st.subheader('Top 5 Biggest Investments')
+        # Top investments
+        st.subheader('Top 5 Investments')
+        top_inv = investor_data.nlargest(5, 'amount')
+        st.bar_chart(top_inv.set_index('startup')['amount'])
 
-        # Get the 5 largest investments
-        top_investments = investor_data.nlargest(5, 'amount')
+        # Sector preference
+        st.subheader('Preferred Sectors')
+        st.bar_chart(investor_data['vertical'].value_counts())
 
-        # Display details of the top 5 investments
-        for index, investment in top_investments.iterrows():
-            st.write(
-                f"Investment: {investment['startup']} with an amount of {investment['amount']}")
-
-        # Create a bar chart for the top 5 investments
-        st.bar_chart(top_investments.set_index('startup')['amount'])
-
-
-        # Show general investment sector
-        st.subheader('Preferred Investment Sectors')
-        sector_investment = investor_data['vertical'].value_counts()
-        st.bar_chart(sector_investment)
-
-        # City-wise pie chart
-        st.subheader('City-Wise Investments')
-        city_investment = investor_data['city'].value_counts()
+        # City distribution
+        st.subheader('City Distribution')
         fig, ax = plt.subplots()
-        ax.pie(city_investment, labels=city_investment.index, autopct='%1.1f%%', startangle=90)
-        ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        investor_data['city'].value_counts().plot.pie(ax=ax, autopct='%1.1f%%')
         st.pyplot(fig)
 
-        # Year-on-year investment graph
-        st.subheader('Year-on-Year Investments')
-        investor_data['year'] = pd.to_datetime(investor_data['date']).dt.year
-        yoy_investment = investor_data.groupby('year')['amount'].sum()
-        st.line_chart(yoy_investment)
+        # Yearly trend
+        st.subheader('Year-on-Year Investment')
+        yoy = investor_data.groupby('year')['amount'].sum()
+        st.line_chart(yoy)
 
         # Similar investments
         st.subheader('Similar Investments')
-        similar_investments = df[df['vertical'].isin(investor_data['vertical'].unique())]
-        st.table(similar_investments[['startup', 'vertical', 'city', 'amount']].drop_duplicates().head())
+        similar = df[df['vertical'].isin(investor_data['vertical'].unique())]
+        st.dataframe(similar[['startup', 'vertical', 'city', 'amount']].drop_duplicates().head())
