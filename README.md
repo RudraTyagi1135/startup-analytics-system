@@ -37,7 +37,6 @@ This project highlights the following **data engineering and analytics skills**:
 ```
 startup_analytics_system/
 │
-├── .venv/
 ├── assets/
 │   ├── Screenshot 2026-03-18 150153.png
 │   ├── Screenshot 2026-03-18 150233.png
