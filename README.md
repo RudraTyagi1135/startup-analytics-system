@@ -233,6 +233,39 @@ This project helped build understanding of:
 
 ---
 
+## 🌐 Live Demo
+
+🔗 **Access the deployed application:**  
+👉 https://evxmjmmh7zcngxsztzs7c5.streamlit.app/
+
+---
+
+### 💡 What You Can Explore
+
+- 📊 Overall startup funding trends and insights  
+- 🏢 Individual startup analysis (funding, investors, growth)  
+- 🧠 Investor behavior and portfolio analysis  
+- 🌍 Sector-wise and city-wise investment patterns  
+
+---
+
+### ⚠️ Note
+
+- The app is deployed on **Streamlit Cloud**  
+- Initial load may take a few seconds due to cold start  
+- Dataset is static (CSV-based), not real-time  
+
+---
+
+### 🚀 Recommended Usage
+
+For best experience:
+- Use desktop/laptop  
+- Explore all three modules:
+  - **Overall Analysis**
+  - **Startup Analysis**
+  - **Investor Analysis**
+
 ## 👤 Author
 
 **Rudra**
