@@ -35,7 +35,7 @@ This project highlights the following **data engineering and analytics skills**:
 ## 📂 Project Structure
 
 ```
-startup_analytics_system/
+STARTUP_ANALYTICS_SYSTEM/
 │
 ├── assets/
 │   ├── Screenshot 2026-03-18 150153.png
