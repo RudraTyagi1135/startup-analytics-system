@@ -271,4 +271,4 @@ For best experience:
 **Rudra**
 
 B.Tech Final Year Student  
-Aspiring **ML Systems / MLOps Engineer**
+**ML Systems / MLOps Engineer**
